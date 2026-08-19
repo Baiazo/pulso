@@ -1,0 +1,45 @@
+# Configuração estrita do analisador, conforme §2.1 e item 1 do §17 do
+# PROJETO-OBD-II.md. Objetivo: pegar erro de tipo e de fluxo assíncrono em
+# tempo de análise, antes de chegar no dispositivo — essencial numa camada
+# serial half-duplex onde bug de concorrência não lança exceção, só corrompe
+# dado silenciosamente.
+
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  errors:
+    missing_required_param: error
+    missing_return: error
+    unawaited_futures: error
+    cancel_subscriptions: error
+    close_sinks: error
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
+    - '**/*.g.dart'
+    - '**/*.freezed.dart'
+
+linter:
+  rules:
+    always_declare_return_types: true
+    avoid_dynamic_calls: true
+    avoid_print: true
+    avoid_slow_async_io: true
+    avoid_type_to_string: true
+    cancel_subscriptions: true
+    close_sinks: true
+    prefer_final_in_for_each: true
+    prefer_final_locals: true
+    prefer_relative_imports: true
+    prefer_single_quotes: true
+    throw_in_finally: true
+    unawaited_futures: true
