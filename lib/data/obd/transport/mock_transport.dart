@@ -18,6 +18,8 @@ class MockTransport implements ObdTransport {
     MockProfile profile = MockProfile.normal,
     DateTime Function()? clock,
     Random? random,
+    this.minLatencyMs = 30,
+    this.maxLatencyMs = 80,
   })  : vehicle = MockVehicle(profile: profile),
         _now = clock ?? DateTime.now,
         _random = random ?? Random() {
@@ -37,6 +39,13 @@ class MockTransport implements ObdTransport {
   final MockVehicle vehicle;
   final DateTime Function() _now;
   final Random _random;
+
+  /// Faixa de latência simulada por consulta (§13: 30–80 ms é o padrão
+  /// realista). Testes que disparam muitos comandos podem encolher essa
+  /// faixa para não ficar lento — não muda o comportamento em produção,
+  /// só quem constrói o transporte explicitamente pede outra faixa.
+  final int minLatencyMs;
+  final int maxLatencyMs;
 
   DateTime? _engineStartedAt;
   bool _connected = false;
@@ -126,7 +135,8 @@ class MockTransport implements ObdTransport {
       return const Ok(null); // nenhuma resposta chega — quem chama expira
     }
 
-    final latencyMs = 30 + _random.nextInt(51); // 30–80 ms, §13
+    final span = maxLatencyMs - minLatencyMs;
+    final latencyMs = minLatencyMs + (span <= 0 ? 0 : _random.nextInt(span + 1));
     unawaited(
       Future.delayed(Duration(milliseconds: latencyMs), () {
         if (!_connected || _controller.isClosed) return;
