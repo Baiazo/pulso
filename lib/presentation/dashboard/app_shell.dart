@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/obd/elm327/elm327_client.dart';
 import '../connection/connection_state.dart';
+import '../diagnostics/dtc_list_screen.dart';
+import '../providers/active_session_controller.dart';
 import '../theme/colors.dart';
 import '../theme/spacing.dart';
 import '../theme/typography.dart';
@@ -32,7 +36,7 @@ class _AppShellState extends State<AppShell> {
       LiveDashboardScreen(connection: widget.connection),
       const _PlaceholderTab(title: 'Alertas', note: 'item 15'),
       const TripsListScreen(),
-      const _PlaceholderTab(title: 'Falhas', note: 'item 14'),
+      _FalhasTab(client: widget.connection.client),
       const _PlaceholderTab(title: 'Veículo', note: 'item 15/19'),
     ];
 
@@ -108,6 +112,26 @@ class _BottomNav extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// A tela de diagnóstico (item 14) precisa do `sessionId` da sessão ativa
+/// pra persistir os `DtcEvent` lidos — mesma espera de PID suportado que
+/// o painel ao vivo (item 12) já faz antes de existir sessão.
+class _FalhasTab extends ConsumerWidget {
+  const _FalhasTab({required this.client});
+
+  final Elm327Client client;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final activeSession = ref.watch(activeSessionProvider);
+    if (activeSession == null) {
+      return const Center(
+        child: CircularProgressIndicator(strokeWidth: 2, color: PulsoColors.accent),
+      );
+    }
+    return DtcListScreen(client: client, sessionId: activeSession.sessionId);
   }
 }
 

@@ -201,6 +201,42 @@ class Elm327Client {
     return decodePidValue(def, bytes.sublist(2));
   }
 
+  /// Lê o freeze frame (Modo 02, §10: sob demanda) de um PID — o valor no
+  /// instante em que a central capturou o quadro, não o valor atual.
+  /// `frameNumber` é sempre 0 nesta app: a ECU básica J1979 (a do simulador
+  /// e a maioria dos veículos de passeio) guarda um único freeze frame,
+  /// associado ao DTC prioritário.
+  Future<Result<double, ObdError>> readFreezeFrame(
+    PidDefinition def, {
+    int frameNumber = 0,
+  }) async {
+    final cmd = '02'
+        '${def.pid.toRadixString(16).padLeft(2, '0').toUpperCase()}'
+        '${frameNumber.toRadixString(16).padLeft(2, '0').toUpperCase()}';
+    final result = await sendCommand(cmd);
+    return switch (result) {
+      Err(:final error) => Err(error),
+      Ok(value: SearchingFrame()) =>
+        const Err(AdapterError('SEARCHING...')),
+      Ok(value: ErrorFrame(:final error)) => Err(error),
+      Ok(value: TextFrame()) => Err(ParseError(cmd)),
+      Ok(value: DataFrame(:final bytes)) => _decodeFreezeFrameResponse(def, bytes, cmd),
+    };
+  }
+
+  Result<double, ObdError> _decodeFreezeFrameResponse(
+    PidDefinition def,
+    List<int> bytes,
+    String cmd,
+  ) {
+    // Resposta do Modo 02: `42 PID FRAME# <dado...>` — um byte a mais que
+    // o Modo 01 (o número do frame, sempre 0 aqui).
+    if (bytes.length < 3 || bytes[0] != 0x42 || bytes[1] != def.pid) {
+      return Err(ParseError(cmd));
+    }
+    return decodePidValue(def, bytes.sublist(3));
+  }
+
   /// Lê os DTCs de um modo de serviço (03 armazenados, 07 pendentes, 0A
   /// permanentes — §9). Descarta o byte de contagem quando a resposta vem
   /// em CAN (comprimento ímpar depois do byte de modo — pares de DTC são
