@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/obd/elm327/elm327_client.dart';
+import '../alerts/alerts_screen.dart';
 import '../connection/connection_state.dart';
 import '../diagnostics/dtc_list_screen.dart';
 import '../providers/active_session_controller.dart';
@@ -9,6 +10,7 @@ import '../theme/colors.dart';
 import '../theme/spacing.dart';
 import '../theme/typography.dart';
 import '../trips/trips_list_screen.dart';
+import '../vehicle/vehicle_screen.dart';
 import '../widgets/connection_chip.dart';
 import 'live_dashboard_screen.dart';
 
@@ -34,10 +36,10 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     final pages = [
       LiveDashboardScreen(connection: widget.connection),
-      const _PlaceholderTab(title: 'Alertas', note: 'item 15'),
+      const AlertsScreen(),
       const TripsListScreen(),
       _FalhasTab(client: widget.connection.client),
-      const _PlaceholderTab(title: 'Veículo', note: 'item 15/19'),
+      const VehicleScreen(),
     ];
 
     return Scaffold(
@@ -132,26 +134,5 @@ class _FalhasTab extends ConsumerWidget {
       );
     }
     return DtcListScreen(client: client, sessionId: activeSession.sessionId);
-  }
-}
-
-class _PlaceholderTab extends StatelessWidget {
-  const _PlaceholderTab({required this.title, required this.note});
-
-  final String title;
-  final String note;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(title, style: PulsoTypography.titleScreen),
-          const SizedBox(height: PulsoSpacing.s2),
-          Text(note, style: PulsoTypography.micro),
-        ],
-      ),
-    );
   }
 }

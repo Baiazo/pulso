@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../domain/analysis/anomaly_resolution.dart';
 import '../../domain/entities/anomaly.dart';
 import '../../domain/entities/baseline.dart';
 import '../../domain/entities/enums.dart';
@@ -65,4 +66,28 @@ final baselineProvider = StreamProvider.family<Baseline?,
 final sessionAnomaliesProvider =
     StreamProvider.family<List<Anomaly>, int>((ref, sessionId) {
   return ref.watch(anomalyRepositoryProvider).watchForSession(sessionId);
+});
+
+/// Alertas agrupados/classificados de um veículo inteiro — fonte da tela
+/// de histórico (item 15, RF14/RF23). Deliberadamente um-tiro (`Future`),
+/// não `.watch()`: é tela de histórico, não painel ao vivo, então não
+/// precisa recalcular a cada leitura gravada. Não existe consulta
+/// "todas as anomalias do veículo" no schema (§11 só indexa anomalias por
+/// sessão) — busca as sessões do veículo e faz N+1 (`forSession` por
+/// sessão), aceitável nos volumes da Fase 1; virar um JOIN fica pra quando
+/// isso doer de verdade.
+final vehicleAlertGroupsProvider =
+    FutureProvider.family<List<AlertGroup>, int>((ref, vehicleId) async {
+  final sessionRepo = ref.watch(sessionRepositoryProvider);
+  final anomalyRepo = ref.watch(anomalyRepositoryProvider);
+
+  final sessions = await sessionRepo.forVehicle(vehicleId);
+  final anomalies = <Anomaly>[];
+  for (final session in sessions) {
+    final id = session.id;
+    if (id == null) continue;
+    anomalies.addAll(await anomalyRepo.forSession(id));
+  }
+
+  return groupAndClassifyAlerts(anomalies: anomalies, sessions: sessions);
 });
