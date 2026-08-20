@@ -6,6 +6,8 @@ import '../../domain/entities/anomaly.dart';
 import '../../domain/entities/baseline.dart' as domain;
 import '../../domain/entities/enums.dart';
 import '../connection/connection_state.dart';
+import '../driving/driving_mode_disclaimer.dart';
+import '../driving/driving_mode_screen.dart';
 import '../parameters/parameter_detail_screen.dart';
 import '../providers/active_session_controller.dart';
 import '../providers/live_data_providers.dart';
@@ -99,6 +101,15 @@ class LiveDashboardScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SizedBox(height: PulsoSpacing.s2),
+          Align(
+            alignment: Alignment.centerRight,
+            child: IconButton(
+              onPressed: () => _openDrivingMode(context),
+              icon: const Icon(Icons.speed, color: PulsoColors.ink2),
+              tooltip: 'Modo direção',
+            ),
+          ),
           if (activeAlert != null) ...[
             const SizedBox(height: PulsoSpacing.s2),
             _AlertBanner(anomaly: activeAlert),
@@ -225,6 +236,14 @@ class LiveDashboardScreen extends ConsumerWidget {
   double? _stableMean(domain.Baseline? baseline) {
     if (baseline == null || baseline.n < 30) return null;
     return baseline.media;
+  }
+
+  Future<void> _openDrivingMode(BuildContext context) async {
+    await showDrivingModeDisclaimerIfNeeded(context);
+    if (!context.mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const DrivingModeScreen()),
+    );
   }
 
   String? _meanCaption(domain.Baseline? baseline, OperatingContext contexto) {
