@@ -23,7 +23,18 @@ class DeviceScanView extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Conectar', style: PulsoTypography.titleScreen),
+            Row(
+              children: [
+                IconButton(
+                  onPressed: controller.reset,
+                  icon: const Icon(Icons.arrow_back, color: PulsoColors.ink),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                ),
+                const SizedBox(width: PulsoSpacing.s2),
+                const Text('Conectar', style: PulsoTypography.titleScreen),
+              ],
+            ),
             const SizedBox(height: PulsoSpacing.s2),
             Row(
               children: [

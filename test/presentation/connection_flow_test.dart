@@ -99,6 +99,28 @@ void main() {
       expect(find.text('HC-05'), findsOneWidget);
     });
 
+    testWidgets('a seta de voltar na busca de adaptador retorna pra tela de '
+        'abertura', (tester) async {
+      await tester.pumpWidget(_app());
+      await tester.pump();
+
+      await tester.tap(find.text('CONECTAR UM ADAPTADOR'));
+      await tester.pump();
+      // Deixa os dois `Future.delayed` do MockDeviceScanner (500ms + 400ms)
+      // resolverem antes de sair da tela — senão sobra Timer pendente na
+      // desmontagem, mesmo que a resposta não importe mais pro teste.
+      await tester.pump(const Duration(milliseconds: 1000));
+
+      // Sem isso o usuário fica preso na busca — não há Navigator (a tela
+      // de conexão é a raiz do app), então só a máquina de estados do
+      // ConnectionController consegue tirar daqui.
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pump();
+
+      expect(find.text('PULSO'), findsOneWidget);
+      expect(find.text('CONECTAR UM ADAPTADOR'), findsOneWidget);
+    });
+
     testWidgets('tela de erro mostra título, motivo e passos numerados',
         (tester) async {
       await tester.pumpWidget(
