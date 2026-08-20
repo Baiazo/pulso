@@ -23,6 +23,12 @@ class Elm327Client {
   bool _echoEnabled = true;
   bool _headersEnabled = false;
 
+  /// Retransmite comando e resposta bruta tal como chegaram no fio, sem
+  /// nenhum parsing — a evidência que o modo de validação (RF22) grava em
+  /// `raw_frames`. `null` por padrão: sem custo de captura enquanto o modo
+  /// de validação está desligado. Setado pelo chamador quando ele liga.
+  void Function(String command, String rawResponse)? onRawFrame;
+
   static const _defaultTimeout = Duration(milliseconds: 1000);
 
   /// 4000 ms para Modos 03/09, como o §7.2 pede — estendido também a
@@ -75,13 +81,19 @@ class Elm327Client {
     sub = _transport.incoming.listen((chunk) {
       buffer.write(chunk);
       if (hasCompletePrompt(buffer.toString())) {
+        // Texto literal do fio, antes de qualquer parsing — é isso que
+        // onRawFrame repassa (RF22): a evidência não pode ser o resultado
+        // já interpretado, só o que o adaptador de fato respondeu.
+        final rawResponse = buffer.toString();
+        onRawFrame?.call(command, rawResponse);
+
         // Modo 04 (apagar DTCs) é o único modo de serviço cuja resposta é
         // texto puro ("OK"), não um frame de dado — tratado como comando
         // AT só para fins de parsing, aqui.
         final upper = command.toUpperCase();
         final isAt = upper.startsWith('AT') || upper == '04';
         final parsed = parseResponse(
-          buffer.toString(),
+          rawResponse,
           isAtCommand: isAt,
           echoedCommand: _echoEnabled ? command : null,
           headersEnabled: _headersEnabled,
@@ -109,6 +121,20 @@ class Elm327Client {
       case AtCommands.headersOff:
         _headersEnabled = false;
     }
+  }
+
+  /// Liga/desliga cabeçalho CAN (`ATH1`/`ATH0`) fora do handshake — o modo
+  /// de validação (RF22) usa isto pra anotar toda resposta com o ID CAN de
+  /// origem, sem precisar reconectar. Reaplica `_applyHandshakeState` com o
+  /// mesmo comando enviado, então `_headersEnabled` continua correto pro
+  /// parsing das respostas seguintes.
+  Future<Result<void, ObdError>> setHeadersEnabled(bool enabled) async {
+    final command = enabled ? AtCommands.headersOn : AtCommands.headersOff;
+    final result = await sendCommand(command);
+    if (result case Err(:final error)) return Err(error);
+    if (result case Ok(value: ErrorFrame(:final error))) return Err(error);
+    _applyHandshakeState(command);
+    return const Ok(null);
   }
 
   /// Sequência de handshake do §7.1. Faz fallback para detecção automática

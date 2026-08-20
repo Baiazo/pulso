@@ -160,4 +160,56 @@ void main() {
       expect(result.valueOrNull!.length, 17);
     });
   });
+
+  group('modo de validação (item 16, RF22)', () {
+    test('setHeadersEnabled(true) liga ATH1 e a leitura seguinte já chega '
+        'com o cabeçalho CAN aplicado no parsing', () async {
+      final transport = MockTransport();
+      await transport.connect();
+      final client = Elm327Client(transport);
+      await client.handshake();
+
+      final headersResult = await client.setHeadersEnabled(true);
+      expect(headersResult.isOk, isTrue);
+
+      // Se `_headersEnabled` não tivesse sido atualizado por
+      // `_applyHandshakeState`, o prefixo "7E8 " que o MockTransport passa
+      // a incluir em toda resposta (§13) sobraria no hex e a leitura de
+      // PID falharia ao decodificar.
+      final def = findPidByKey('engine_rpm')!;
+      final rpmResult = await client.readPid(def);
+      expect(rpmResult.isOk, isTrue);
+      expect(rpmResult.valueOrNull, closeTo(780, 80));
+    });
+
+    test('onRawFrame captura o par (comando, resposta bruta) exato de uma '
+        'consulta de PID', () async {
+      final transport = MockTransport();
+      await transport.connect();
+      final client = Elm327Client(transport);
+      await client.handshake();
+      await client.setHeadersEnabled(true);
+
+      String? capturedCommand;
+      String? capturedRawResponse;
+      client.onRawFrame = (command, rawResponse) {
+        capturedCommand = command;
+        capturedRawResponse = rawResponse;
+      };
+
+      final def = findPidByKey('engine_rpm')!;
+      final result = await client.readPid(def);
+      expect(result.isOk, isTrue);
+
+      expect(capturedCommand, '010C');
+      // Byte de resposta do Modo 01 PID 0C é "41 0C" (§7.3) — a captura
+      // precisa ser o texto do fio, não já reinterpretado.
+      expect(capturedRawResponse, isNotNull);
+      expect(capturedRawResponse!.toUpperCase(), contains('410C'));
+      // Com ATH1 ligado, o MockTransport prefixa o cabeçalho CAN "7E8" —
+      // se a captura acontecesse depois do parsing, esse prefixo já teria
+      // sido removido (é exatamente o que RF22 quer preservar).
+      expect(capturedRawResponse!.toUpperCase(), contains('7E8'));
+    });
+  });
 }

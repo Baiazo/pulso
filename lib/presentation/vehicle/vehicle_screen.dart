@@ -12,6 +12,7 @@ import '../providers/live_data_providers.dart';
 import '../theme/colors.dart';
 import '../theme/spacing.dart';
 import '../theme/typography.dart';
+import '../validation/validation_mode_screen.dart';
 import '../widgets/calibration_bar.dart';
 
 const _monthAbbrev = [
@@ -204,6 +205,16 @@ class _VehicleContent extends StatelessWidget {
         _RodoviaBar(baseline: data.rodovia),
         const SizedBox(height: PulsoSpacing.s5),
         _ParadoBar(baseline: data.paradoQuente, earliestSession: earliestSession),
+        const SizedBox(height: PulsoSpacing.s7),
+        SizedBox(
+          height: 52,
+          child: OutlinedButton(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const ValidationModeScreen()),
+            ),
+            child: const Text('Modo de validação'),
+          ),
+        ),
         const SizedBox(height: PulsoSpacing.s6),
       ],
     );

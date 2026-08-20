@@ -7,6 +7,7 @@ import '../../domain/entities/anomaly.dart';
 import '../../domain/entities/enums.dart';
 import '../../domain/entities/reading.dart';
 import '../../domain/entities/session.dart';
+import '../export/trip_export.dart';
 import '../providers/app_providers.dart';
 import '../theme/colors.dart';
 import '../theme/spacing.dart';
@@ -139,6 +140,8 @@ class _TripDetailBody extends StatelessWidget {
           const SizedBox(height: PulsoSpacing.s3),
           for (final anomaly in data.anomalies) _AnomalyTile(anomaly: anomaly),
         ],
+        const SizedBox(height: PulsoSpacing.s7),
+        _ExportButtons(session: session),
         const SizedBox(height: PulsoSpacing.s6),
       ],
     );
@@ -162,6 +165,65 @@ class _TripDetailBody extends StatelessWidget {
     if (anomalies.isEmpty) return null;
     final first = anomalies.reduce((a, b) => a.ts.isBefore(b.ts) ? a : b);
     return first.ts.difference(t0).inSeconds.toDouble();
+  }
+}
+
+/// Dois botões — não só "Exportar CSV" como no mockup — porque RF20 exige
+/// CSV e JSON; um `ConsumerStatefulWidget` isolado só pra isto evita ter
+/// que promover a tela inteira (`_TripDetailBody` é `StatelessWidget`) a
+/// algo com estado só por causa do spinner de exportação.
+class _ExportButtons extends ConsumerStatefulWidget {
+  const _ExportButtons({required this.session});
+
+  final Session session;
+
+  @override
+  ConsumerState<_ExportButtons> createState() => _ExportButtonsState();
+}
+
+class _ExportButtonsState extends ConsumerState<_ExportButtons> {
+  bool _exporting = false;
+
+  Future<void> _run(Future<void> Function() export) async {
+    setState(() => _exporting = true);
+    try {
+      await export();
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: _exporting ? null : () => _run(() => exportSessionCsv(ref, widget.session)),
+            child: _exporting
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: PulsoColors.ink2),
+                  )
+                : const Text('Exportar CSV'),
+          ),
+        ),
+        const SizedBox(width: PulsoSpacing.s3),
+        Expanded(
+          child: OutlinedButton(
+            onPressed: _exporting ? null : () => _run(() => exportSessionJson(ref, widget.session)),
+            child: _exporting
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: PulsoColors.ink2),
+                  )
+                : const Text('Exportar JSON'),
+          ),
+        ),
+      ],
+    );
   }
 }
 

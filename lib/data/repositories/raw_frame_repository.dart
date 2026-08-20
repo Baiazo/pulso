@@ -15,6 +15,10 @@ abstract class RawFrameRepository {
   });
 
   Future<List<domain.RawFrame>> forSession(int sessionId);
+
+  /// Alimenta a tela do modo de validação (item 16) enquanto a gravação
+  /// está em andamento — cada quadro novo precisa aparecer sem recarregar.
+  Stream<List<domain.RawFrame>> watchForSession(int sessionId);
 }
 
 class LocalRawFrameRepository implements RawFrameRepository {
@@ -62,5 +66,13 @@ class LocalRawFrameRepository implements RawFrameRepository {
           ..orderBy([(t) => OrderingTerm.asc(t.ts)]))
         .get();
     return rows.map(_toDomain).toList();
+  }
+
+  @override
+  Stream<List<domain.RawFrame>> watchForSession(int sessionId) {
+    final query = _db.select(_db.rawFrames)
+      ..where((t) => t.sessionId.equals(sessionId))
+      ..orderBy([(t) => OrderingTerm.asc(t.ts)]);
+    return query.watch().map((rows) => rows.map(_toDomain).toList());
   }
 }

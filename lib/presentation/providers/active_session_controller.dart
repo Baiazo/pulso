@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/obd/elm327/elm327_client.dart';
@@ -18,12 +20,18 @@ class ActiveSession {
     required this.sessionId,
     required this.scheduler,
     required this.supportedCatalog,
+    this.validationMode = false,
   });
 
   final int vehicleId;
   final int sessionId;
   final SamplingScheduler scheduler;
   final List<PidDefinition> supportedCatalog;
+
+  /// Espelha `Elm327Client.onRawFrame` estar ligado ou não — a tela do
+  /// modo de validação (item 16, RF22) observa este campo pra decidir se
+  /// mostra a lista de quadros capturados.
+  final bool validationMode;
 }
 
 final activeSessionProvider =
@@ -40,6 +48,7 @@ class ActiveSessionController extends Notifier<ActiveSession?> {
   // "Cannot use Ref or modify other providers inside life-cycles/selectors").
   SamplingScheduler? _runningScheduler;
   AnalysisEngine? _runningEngine;
+  Elm327Client? _runningClient;
 
   @override
   ActiveSession? build() {
@@ -102,6 +111,7 @@ class ActiveSessionController extends Notifier<ActiveSession?> {
     );
     scheduler.start(session.id!);
     _runningScheduler = scheduler;
+    _runningClient = client;
 
     state = ActiveSession(
       vehicleId: vehicle.id!,
@@ -111,11 +121,54 @@ class ActiveSessionController extends Notifier<ActiveSession?> {
     );
   }
 
+  /// Liga/desliga o modo de validação (item 16, RF22): ATH1 em toda
+  /// resposta e cada par comando/resposta bruta gravado em `raw_frames`,
+  /// evidência da seção 5.7 do TCC. `client` vem de quem chama (a tela lê
+  /// da conexão estabelecida) em vez de guardado aqui, porque este método
+  /// pode ser chamado bem depois de `startFor` — pegar de `_runningClient`
+  /// arriscaria divergir se o transporte fosse reconectado no meio termo.
+  Future<void> setValidationMode(bool enabled, Elm327Client client) async {
+    final current = state;
+    if (current == null) return;
+
+    await client.setHeadersEnabled(enabled);
+
+    if (enabled) {
+      final rawFrameRepo = ref.read(rawFrameRepositoryProvider);
+      client.onRawFrame = (comando, respostaBruta) {
+        unawaited(
+          rawFrameRepo.record(
+            sessionId: current.sessionId,
+            ts: DateTime.now(),
+            comando: comando,
+            respostaBruta: respostaBruta,
+          ),
+        );
+      };
+    } else {
+      client.onRawFrame = null;
+    }
+
+    state = ActiveSession(
+      vehicleId: current.vehicleId,
+      sessionId: current.sessionId,
+      scheduler: current.scheduler,
+      supportedCatalog: current.supportedCatalog,
+      validationMode: enabled,
+    );
+  }
+
   Future<void> stop() async {
     final current = state;
     if (current == null) return;
     current.scheduler.stop();
     _runningScheduler = null;
+
+    // Defensivo: se este mesmo `Elm327Client` fosse reaproveitado numa
+    // sessão seguinte, um `onRawFrame` esquecido gravaria quadro contra
+    // um `sessionId` que já encerrou.
+    _runningClient?.onRawFrame = null;
+    _runningClient = null;
 
     final readingRepo = ref.read(readingRepositoryProvider);
 
