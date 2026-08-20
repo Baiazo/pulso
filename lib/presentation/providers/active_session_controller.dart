@@ -9,6 +9,7 @@ import '../../data/obd/sampling/sampling_scheduler.dart';
 import '../../data/repositories/reading_repository.dart';
 import '../../domain/analysis/analysis_engine.dart';
 import '../../domain/entities/enums.dart';
+import '../foreground/foreground_service.dart';
 import 'app_providers.dart';
 
 /// Uma sessão de coleta em andamento, com o agendador já rodando — é o
@@ -113,6 +114,15 @@ class ActiveSessionController extends Notifier<ActiveSession?> {
     _runningScheduler = scheduler;
     _runningClient = client;
 
+    // RNF10: sem isso, o Android mata o isolate (e o Timer.periodic do
+    // agendador junto) quando a tela apaga ou o app vai pro plano de
+    // fundo — a notificação é o que mantém o processo vivo. Sem `await`
+    // de propósito: a coleta em si já está rodando (scheduler.start acima),
+    // e o pedido de permissão de notificação não pode travar o começo da
+    // sessão — mesmo raciocínio do `unawaited(startFor(...))` de quem
+    // chama este método.
+    unawaited(startCollectionForegroundService());
+
     state = ActiveSession(
       vehicleId: vehicle.id!,
       sessionId: session.id!,
@@ -163,6 +173,9 @@ class ActiveSessionController extends Notifier<ActiveSession?> {
     if (current == null) return;
     current.scheduler.stop();
     _runningScheduler = null;
+    // Mesmo raciocínio do `unawaited` em `startFor`: best-effort, não
+    // pode travar o encerramento da sessão.
+    unawaited(stopCollectionForegroundService());
 
     // Defensivo: se este mesmo `Elm327Client` fosse reaproveitado numa
     // sessão seguinte, um `onRawFrame` esquecido gravaria quadro contra
