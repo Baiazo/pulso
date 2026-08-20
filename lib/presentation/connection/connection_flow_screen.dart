@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../dashboard/app_shell.dart';
 import '../theme/colors.dart';
-import 'connected_view.dart';
 import 'connection_controller.dart';
 import 'connection_error_view.dart';
 import 'connection_state.dart';
@@ -28,7 +28,7 @@ class ConnectionFlowScreen extends ConsumerWidget {
         ConnectionScanning(:final devices) => DeviceScanView(devices: devices),
         ConnectionHandshaking() =>
           HandshakeView(state: state, onCancel: controller.reset),
-        ConnectionEstablished() => ConnectedView(state: state),
+        ConnectionEstablished() => AppShell(connection: state),
         ConnectionFailed(:final kind) => ConnectionErrorView(
             kind: kind,
             onPrimaryAction: controller.reset,

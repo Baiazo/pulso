@@ -19,6 +19,11 @@ abstract class ReadingRepository {
   /// Fonte do painel ao vivo (RF15) e dos gráficos (RF16) — reativo,
   /// porque a tela precisa atualizar sozinha conforme chega leitura nova.
   Stream<List<domain.Reading>> watchForSession(int sessionId, {String? pidKey});
+
+  /// Só a leitura mais recente de um PID — o painel ao vivo observa isso
+  /// por parâmetro em vez de carregar a lista inteira da sessão, que só
+  /// cresce (§11: `readings` é a tabela que mais cresce).
+  Stream<domain.Reading?> watchLatest({required int sessionId, required String pidKey});
 }
 
 class LocalReadingRepository implements ReadingRepository {
@@ -87,5 +92,17 @@ class LocalReadingRepository implements ReadingRepository {
       query.where((t) => t.pidKey.equals(pidKey));
     }
     return query.watch().map((rows) => rows.map(_toDomain).toList());
+  }
+
+  @override
+  Stream<domain.Reading?> watchLatest({
+    required int sessionId,
+    required String pidKey,
+  }) {
+    final query = _db.select(_db.readings)
+      ..where((t) => t.sessionId.equals(sessionId) & t.pidKey.equals(pidKey))
+      ..orderBy([(t) => OrderingTerm.desc(t.ts)])
+      ..limit(1);
+    return query.watchSingleOrNull().map((row) => row == null ? null : _toDomain(row));
   }
 }

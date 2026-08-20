@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/result.dart';
@@ -7,6 +9,7 @@ import '../../data/obd/transport/device_scanner.dart';
 import '../../data/obd/transport/mock/mock_vehicle.dart';
 import '../../data/obd/transport/mock_transport.dart';
 import '../../data/obd/transport/obd_transport.dart';
+import '../providers/active_session_controller.dart';
 import 'connection_state.dart';
 
 final deviceScannerProvider = Provider<DeviceScanner>((ref) => MockDeviceScanner());
@@ -74,6 +77,15 @@ class ConnectionController extends Notifier<ObdConnectionState> {
           protocolDescription: protocolDescription,
           transport: transport,
           client: client,
+        );
+        // Dispara a sessão de coleta (item 8+10) só depois de publicar o
+        // estado conectado — o painel ao vivo já pode montar a UI
+        // enquanto a descoberta de PIDs roda em segundo plano.
+        unawaited(
+          ref.read(activeSessionProvider.notifier).startFor(
+                client,
+                protocolDescription: protocolDescription,
+              ),
         );
       case Err():
         state = const ConnectionFailed(ConnectionErrorKind.protocolNotRecognized);

@@ -25,6 +25,14 @@ abstract class BaselineRepository {
   });
 
   Future<List<domain.Baseline>> forVehicle(int vehicleId);
+
+  /// Fonte do "MÉD 88°" no painel ao vivo (item 12) — reativo porque a
+  /// baseline muda a cada leitura não-anômala.
+  Stream<domain.Baseline?> watch({
+    required int vehicleId,
+    required String pidKey,
+    required OperatingContext contexto,
+  });
 }
 
 class LocalBaselineRepository implements BaselineRepository {
@@ -117,5 +125,19 @@ class LocalBaselineRepository implements BaselineRepository {
           ..where((t) => t.vehicleId.equals(vehicleId)))
         .get();
     return rows.map(_toDomain).toList();
+  }
+
+  @override
+  Stream<domain.Baseline?> watch({
+    required int vehicleId,
+    required String pidKey,
+    required OperatingContext contexto,
+  }) {
+    final query = _db.select(_db.baselines)
+      ..where((t) =>
+          t.vehicleId.equals(vehicleId) &
+          t.pidKey.equals(pidKey) &
+          t.contexto.equals(contexto.jsonValue));
+    return query.watchSingleOrNull().map((row) => row == null ? null : _toDomain(row));
   }
 }

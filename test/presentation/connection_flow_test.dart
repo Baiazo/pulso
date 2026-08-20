@@ -1,12 +1,26 @@
+import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pulso/data/db/database.dart';
 import 'package:pulso/presentation/connection/connection_controller.dart';
 import 'package:pulso/presentation/connection/connection_flow_screen.dart';
 import 'package:pulso/presentation/connection/connection_state.dart';
+import 'package:pulso/presentation/providers/active_session_controller.dart';
+import 'package:pulso/presentation/providers/app_providers.dart';
 
 Widget _app() => const ProviderScope(
       child: MaterialApp(home: ConnectionFlowScreen()),
+    );
+
+/// Banco em memória — evita que a sessão pós-conexão (ActiveSessionController)
+/// bata no `path_provider` real, que não tem implementação de plataforma
+/// em teste de widget.
+Widget _appWithInMemoryDb() => ProviderScope(
+      overrides: [
+        databaseProvider.overrideWithValue(AppDatabase(NativeDatabase.memory())),
+      ],
+      child: const MaterialApp(home: ConnectionFlowScreen()),
     );
 
 void main() {
@@ -21,9 +35,9 @@ void main() {
       expect(find.text('VER EM MODO DEMONSTRAÇÃO'), findsOneWidget);
     });
 
-    testWidgets('modo demonstração conecta de ponta a ponta contra o mock',
-        (tester) async {
-      await tester.pumpWidget(_app());
+    testWidgets('modo demonstração conecta de ponta a ponta contra o mock '
+        'e chega no painel (item 12)', (tester) async {
+      await tester.pumpWidget(_appWithInMemoryDb());
       await tester.pump();
 
       await tester.tap(find.text('VER EM MODO DEMONSTRAÇÃO'));
@@ -31,11 +45,43 @@ void main() {
 
       expect(find.byType(CircularProgressIndicator), findsWidgets);
 
-      // deixa o handshake real (contra o MockTransport) terminar
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+      // Não dá pra usar pumpAndSettle: uma vez conectado, o painel ao vivo
+      // liga um Timer.periodic real (item 8) que nunca "assenta" sozinho.
+      // Avança o tempo em passos limitados até o handshake + descoberta
+      // de PIDs (item 6) terminarem.
+      for (var i = 0; i < 30; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
 
       expect(find.text('Conectado'), findsOneWidget);
       expect(find.textContaining('CAN'), findsOneWidget);
+      expect(find.text('RPM'), findsOneWidget);
+
+      // Para o agendador explicitamente ANTES de desmontar — parar só via
+      // dispose do ProviderScope corre risco de deixar um comando ELM327
+      // em voo (com seu próprio timeout pendente) bem no instante do
+      // corte. Parando aqui, o que sobra são só os timers já em vias de
+      // resolver, que os pumps seguintes dão conta de assentar.
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(ConnectionFlowScreen)),
+      );
+      await container.read(activeSessionProvider.notifier).stop();
+      for (var i = 0; i < 20; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+
+      // Desmonta a árvore explicitamente: derruba o ProviderScope e as
+      // streams do Drift ainda inscritas nos providers do painel (cada
+      // uma agenda seu próprio Timer.zero de limpeza ao cancelar — o
+      // painel observa ~8 streams, então precisa de mais de um pump pra
+      // essa cascata de cancelamento assentar de vez).
+      await tester.pumpWidget(const SizedBox());
+      // Precisa de duração explícita: um pump() sem argumento não avança
+      // o relógio fake, e um Timer de duração zero só dispara quando o
+      // relógio avança — mesmo que seja 1ms.
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 1));
+      }
     });
 
     testWidgets('buscar adaptador mostra os dispositivos do MockDeviceScanner',

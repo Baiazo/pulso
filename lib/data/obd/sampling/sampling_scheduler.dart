@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../../../domain/analysis/context_classifier.dart';
+import '../../../domain/entities/reading.dart';
 import '../../repositories/reading_repository.dart';
 import '../elm327/elm327_client.dart';
 import '../pids/pid_definition.dart';
@@ -18,12 +19,18 @@ class SamplingScheduler {
     required this._readingRepository,
     required List<PidDefinition> supportedCatalog,
     this.cycleInterval = const Duration(milliseconds: 200),
+    this.onReading,
   }) : _catalog = supportedCatalog;
 
   final Elm327Client _client;
   final ReadingRepository _readingRepository;
   final List<PidDefinition> _catalog;
   final Duration cycleInterval;
+
+  /// Chamado depois de cada leitura persistida — é o que alimenta o
+  /// motor de análise (item 10) sem o agendador precisar conhecê-lo;
+  /// quem monta o app decide o que fazer com cada leitura.
+  final Future<void> Function(Reading reading)? onReading;
 
   Timer? _timer;
   int? _sessionId;
@@ -133,13 +140,14 @@ class SamplingScheduler {
         coolantTempC: _lastKnownCoolantTempC,
       );
 
-      await _readingRepository.record(
+      final reading = await _readingRepository.record(
         sessionId: sessionId,
         ts: DateTime.now(),
         pidKey: def.key,
         valor: value,
         contexto: contexto,
       );
+      await onReading?.call(reading);
 
       _sampleCounts.update(def.key, (n) => n + 1, ifAbsent: () => 1);
       _firstSampleAt.putIfAbsent(def.key, DateTime.now);
