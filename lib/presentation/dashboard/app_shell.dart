@@ -4,6 +4,7 @@ import '../connection/connection_state.dart';
 import '../theme/colors.dart';
 import '../theme/spacing.dart';
 import '../theme/typography.dart';
+import '../trips/trips_list_screen.dart';
 import '../widgets/connection_chip.dart';
 import 'live_dashboard_screen.dart';
 
@@ -30,7 +31,7 @@ class _AppShellState extends State<AppShell> {
     final pages = [
       LiveDashboardScreen(connection: widget.connection),
       const _PlaceholderTab(title: 'Alertas', note: 'item 15'),
-      const _PlaceholderTab(title: 'Viagens', note: 'item 13'),
+      const TripsListScreen(),
       const _PlaceholderTab(title: 'Falhas', note: 'item 14'),
       const _PlaceholderTab(title: 'Veículo', note: 'item 15/19'),
     ];

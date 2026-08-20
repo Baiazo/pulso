@@ -6,6 +6,7 @@ import '../../domain/entities/anomaly.dart';
 import '../../domain/entities/baseline.dart' as domain;
 import '../../domain/entities/enums.dart';
 import '../connection/connection_state.dart';
+import '../parameters/parameter_detail_screen.dart';
 import '../providers/active_session_controller.dart';
 import '../providers/live_data_providers.dart';
 import '../theme/colors.dart';
@@ -104,17 +105,20 @@ class LiveDashboardScreen extends ConsumerWidget {
           ],
           const SizedBox(height: PulsoSpacing.s6),
           Center(
-            child: ArcGauge(
-              diameter: 212,
-              value: rpmReading.value?.valor ?? _rpmDisplayRange.min,
-              min: _rpmDisplayRange.min,
-              max: _rpmDisplayRange.max,
-              mean: _stableMean(rpmBaseline.value),
-              severity: rpmSeverity,
-              child: _GaugeCenter(
-                value: _fmt(rpmReading.value?.valor, decimals: 0),
-                unit: 'RPM',
-                caption: _meanCaption(rpmBaseline.value, contexto),
+            child: GestureDetector(
+              onTap: () => _openParameterDetail(context, vehicleId, sessionId, 'engine_rpm'),
+              child: ArcGauge(
+                diameter: 212,
+                value: rpmReading.value?.valor ?? _rpmDisplayRange.min,
+                min: _rpmDisplayRange.min,
+                max: _rpmDisplayRange.max,
+                mean: _stableMean(rpmBaseline.value),
+                severity: rpmSeverity,
+                child: _GaugeCenter(
+                  value: _fmt(rpmReading.value?.valor, decimals: 0),
+                  unit: 'RPM',
+                  caption: _meanCaption(rpmBaseline.value, contexto),
+                ),
               ),
             ),
           ),
@@ -122,34 +126,42 @@ class LiveDashboardScreen extends ConsumerWidget {
           Row(
             children: [
               Expanded(
-                child: ArcGauge(
-                  diameter: 142,
-                  value: speed,
-                  min: _speedDisplayRange.min,
-                  max: _speedDisplayRange.max,
-                  child: _GaugeCenter(
-                    value: _fmt(speedReading.value?.valor, decimals: 0),
-                    unit: 'KM/H',
-                    caption: 'VELOCIDADE',
-                    labelFirst: true,
+                child: GestureDetector(
+                  onTap: () =>
+                      _openParameterDetail(context, vehicleId, sessionId, 'vehicle_speed'),
+                  child: ArcGauge(
+                    diameter: 142,
+                    value: speed,
+                    min: _speedDisplayRange.min,
+                    max: _speedDisplayRange.max,
+                    child: _GaugeCenter(
+                      value: _fmt(speedReading.value?.valor, decimals: 0),
+                      unit: 'KM/H',
+                      caption: 'VELOCIDADE',
+                      labelFirst: true,
+                    ),
                   ),
                 ),
               ),
               Expanded(
-                child: ArcGauge(
-                  diameter: 142,
-                  value: coolant,
-                  min: _coolantDisplayRange.min,
-                  max: _coolantDisplayRange.max,
-                  mean: _stableMean(coolantBaseline.value),
-                  severity: coolantSeverity,
-                  child: _GaugeCenter(
-                    value: _fmt(coolantReading.value?.valor, decimals: 0),
-                    unit: '°C',
-                    caption: _stableMean(coolantBaseline.value) != null
-                        ? 'MÉD ${_stableMean(coolantBaseline.value)!.round()}'
-                        : 'MOTOR',
-                    labelFirst: true,
+                child: GestureDetector(
+                  onTap: () =>
+                      _openParameterDetail(context, vehicleId, sessionId, 'coolant_temp'),
+                  child: ArcGauge(
+                    diameter: 142,
+                    value: coolant,
+                    min: _coolantDisplayRange.min,
+                    max: _coolantDisplayRange.max,
+                    mean: _stableMean(coolantBaseline.value),
+                    severity: coolantSeverity,
+                    child: _GaugeCenter(
+                      value: _fmt(coolantReading.value?.valor, decimals: 0),
+                      unit: '°C',
+                      caption: _stableMean(coolantBaseline.value) != null
+                          ? 'MÉD ${_stableMean(coolantBaseline.value)!.round()}'
+                          : 'MOTOR',
+                      labelFirst: true,
+                    ),
                   ),
                 ),
               ),
@@ -166,20 +178,32 @@ class LiveDashboardScreen extends ConsumerWidget {
             crossAxisSpacing: PulsoSpacing.s3,
             childAspectRatio: 1.6,
             children: [
-              StatTile(
-                label: 'Carga do motor',
-                value: _fmt(loadReading.value?.valor, decimals: 0),
-                unit: '%',
+              GestureDetector(
+                onTap: () =>
+                    _openParameterDetail(context, vehicleId, sessionId, 'engine_load'),
+                child: StatTile(
+                  label: 'Carga do motor',
+                  value: _fmt(loadReading.value?.valor, decimals: 0),
+                  unit: '%',
+                ),
               ),
-              StatTile(
-                label: 'Acelerador',
-                value: _fmt(throttleReading.value?.valor, decimals: 0),
-                unit: '%',
+              GestureDetector(
+                onTap: () =>
+                    _openParameterDetail(context, vehicleId, sessionId, 'throttle_position'),
+                child: StatTile(
+                  label: 'Acelerador',
+                  value: _fmt(throttleReading.value?.valor, decimals: 0),
+                  unit: '%',
+                ),
               ),
-              StatTile(
-                label: 'Bateria',
-                value: _fmt(voltageReading.value?.valor, decimals: 1),
-                unit: 'V',
+              GestureDetector(
+                onTap: () => _openParameterDetail(
+                    context, vehicleId, sessionId, 'control_module_voltage'),
+                child: StatTile(
+                  label: 'Bateria',
+                  value: _fmt(voltageReading.value?.valor, decimals: 1),
+                  unit: 'V',
+                ),
               ),
               StatTile(
                 label: 'Consumo',
@@ -224,6 +248,23 @@ class LiveDashboardScreen extends ConsumerWidget {
     }
     return null;
   }
+}
+
+void _openParameterDetail(
+  BuildContext context,
+  int vehicleId,
+  int sessionId,
+  String pidKey,
+) {
+  Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => ParameterDetailScreen(
+        vehicleId: vehicleId,
+        sessionId: sessionId,
+        pidKey: pidKey,
+      ),
+    ),
+  );
 }
 
 String _fmt(double? value, {required int decimals}) {

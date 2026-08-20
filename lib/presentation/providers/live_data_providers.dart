@@ -4,7 +4,42 @@ import '../../domain/entities/anomaly.dart';
 import '../../domain/entities/baseline.dart';
 import '../../domain/entities/enums.dart';
 import '../../domain/entities/reading.dart';
+import '../../domain/entities/session.dart';
+import '../../domain/entities/vehicle.dart';
+import 'active_session_controller.dart';
 import 'app_providers.dart';
+
+/// O único veículo do app na Fase 1 — sem seletor de veículo (§19), mas
+/// as telas de histórico/veículo precisam de um `vehicleId` mesmo sem
+/// sessão ativa (revisar viagens antigas desconectado, por exemplo).
+final defaultVehicleIdProvider = FutureProvider<int?>((ref) async {
+  final active = ref.watch(activeSessionProvider);
+  if (active != null) return active.vehicleId;
+  final vehicles = await ref.read(vehicleRepositoryProvider).all();
+  return vehicles.isEmpty ? null : vehicles.first.id;
+});
+
+final defaultVehicleProvider = FutureProvider<Vehicle?>((ref) async {
+  final id = await ref.watch(defaultVehicleIdProvider.future);
+  if (id == null) return null;
+  return ref.read(vehicleRepositoryProvider).byId(id);
+});
+
+/// Sessões de um veículo — fonte da tela de viagens (item 13, RF17).
+final sessionsForVehicleProvider =
+    StreamProvider.family<List<Session>, int>((ref, vehicleId) {
+  return ref.watch(sessionRepositoryProvider).watchForVehicle(vehicleId);
+});
+
+/// Série completa de um PID numa sessão — fonte do gráfico de 30 min da
+/// tela de detalhe do parâmetro (item 13, RF16).
+final readingsForSessionProvider =
+    StreamProvider.family<List<Reading>, ({int sessionId, String pidKey})>((ref, args) {
+  return ref.watch(readingRepositoryProvider).watchForSession(
+        args.sessionId,
+        pidKey: args.pidKey,
+      );
+});
 
 /// Última leitura de um PID numa sessão — reativo (painel ao vivo, RF15).
 final latestReadingProvider =
