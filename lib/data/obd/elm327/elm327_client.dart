@@ -113,8 +113,15 @@ class Elm327Client {
 
   /// Sequência de handshake do §7.1. Faz fallback para detecção automática
   /// de protocolo (`ATSP0`) se a primeira consulta real (`0100`) falhar
-  /// com o protocolo fixo (CAN 11 bits / 500 kbps).
-  Future<Result<void, ObdError>> handshake() async {
+  /// com o protocolo fixo (CAN 11 bits / 500 kbps). Devolve a descrição
+  /// do protocolo negociado (resposta do `ATDP`).
+  ///
+  /// `onStep`, se informado, é chamado depois de cada comando — é o que
+  /// alimenta a tela de handshake (item 11) com o progresso real, sem
+  /// duplicar esta sequência na camada de apresentação.
+  Future<Result<String, ObdError>> handshake({
+    void Function(String command, ParsedFrame response)? onStep,
+  }) async {
     const steps = [
       AtCommands.reset,
       AtCommands.echoOff,
@@ -126,28 +133,41 @@ class Elm327Client {
     for (final step in steps) {
       final result = await sendCommand(step);
       if (result case Err(:final error)) return Err(error);
+      if (result case Ok(:final value)) onStep?.call(step, value);
       _applyHandshakeState(step);
     }
 
-    final protocolResult =
-        await sendCommand(AtCommands.setProtocol(AtCommands.protocolCan11Bit500k));
+    final protocolCommand = AtCommands.setProtocol(AtCommands.protocolCan11Bit500k);
+    final protocolResult = await sendCommand(protocolCommand);
     if (protocolResult case Err(:final error)) return Err(error);
+    if (protocolResult case Ok(:final value)) onStep?.call(protocolCommand, value);
 
     var probe = await sendCommand('0100');
-    if (probe case Ok(value: DataFrame())) {
-      // ECU respondeu no protocolo fixo — segue.
+    if (probe case Ok(:final value) when value is DataFrame) {
+      onStep?.call('0100', value);
     } else {
-      final fallback =
-          await sendCommand(AtCommands.setProtocol(AtCommands.protocolAuto));
+      final autoCommand = AtCommands.setProtocol(AtCommands.protocolAuto);
+      final fallback = await sendCommand(autoCommand);
       if (fallback case Err(:final error)) return Err(error);
+      if (fallback case Ok(:final value)) onStep?.call(autoCommand, value);
+
       probe = await sendCommand('0100');
       if (probe case Err(:final error)) return Err(error);
       if (probe case Ok(value: ErrorFrame(:final error))) return Err(error);
+      if (probe case Ok(:final value)) onStep?.call('0100', value);
     }
 
-    await sendCommand(AtCommands.describeProtocol);
-    await sendCommand(AtCommands.adaptiveTimingOn);
-    return const Ok(null);
+    final describeResult = await sendCommand(AtCommands.describeProtocol);
+    if (describeResult case Ok(:final value)) onStep?.call(AtCommands.describeProtocol, value);
+
+    final adaptiveResult = await sendCommand(AtCommands.adaptiveTimingOn);
+    if (adaptiveResult case Ok(:final value)) onStep?.call(AtCommands.adaptiveTimingOn, value);
+
+    final protocolDescription = switch (describeResult) {
+      Ok(value: TextFrame(:final text)) => text,
+      _ => 'Protocolo desconhecido',
+    };
+    return Ok(protocolDescription);
   }
 
   String _formatCommand(int mode, int pid) =>
