@@ -78,6 +78,20 @@ class Baselines extends Table with _AuditColumns {
   DateTimeColumn get atualizadoEm => dateTime()();
 }
 
+/// Extensão sobre o schema do §11 — ver domain/entities/trend_watch.dart
+/// para o porquê.
+///
+/// `@DataClassName` força o singular correto: a singularização automática
+/// do Drift stripa só o "s" final e gera "TrendWatche".
+@DataClassName('TrendWatch')
+class TrendWatches extends Table with _AuditColumns {
+  IntColumn get vehicleId => integer().references(Vehicles, #id)();
+  TextColumn get pidKey => text()();
+  TextColumn get contexto => text()();
+  IntColumn get consecutiveDeviatedSessions => integer().withDefault(const Constant(0))();
+  IntColumn get lastSessionId => integer().nullable()();
+}
+
 class Anomalies extends Table with _AuditColumns {
   IntColumn get sessionId => integer().references(Sessions, #id)();
   DateTimeColumn get ts => dateTime()();

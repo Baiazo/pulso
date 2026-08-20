@@ -19,6 +19,7 @@ part 'database.g.dart';
     DtcEvents,
     Baselines,
     Anomalies,
+    TrendWatches,
   ],
 )
 class AppDatabase extends _$AppDatabase {

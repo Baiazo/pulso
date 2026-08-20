@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'enums.dart';
 
 /// Estado persistido do algoritmo de Welford para um `(parâmetro,
@@ -29,6 +31,8 @@ class Baseline {
   final DateTime atualizadoEm;
 
   double get variance => n < 2 ? 0 : m2 / (n - 1);
+
+  double get stdDev => variance <= 0 ? 0 : math.sqrt(variance);
 
   Baseline copyWith({
     int? id,

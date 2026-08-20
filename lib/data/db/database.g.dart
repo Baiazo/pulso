@@ -4138,6 +4138,531 @@ class AnomaliesCompanion extends UpdateCompanion<Anomaly> {
   }
 }
 
+class $TrendWatchesTable extends TrendWatches
+    with TableInfo<$TrendWatchesTable, TrendWatch> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TrendWatchesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> syncedAt = GeneratedColumn<DateTime>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _vehicleIdMeta = const VerificationMeta(
+    'vehicleId',
+  );
+  @override
+  late final GeneratedColumn<int> vehicleId = GeneratedColumn<int>(
+    'vehicle_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES vehicles (id)',
+    ),
+  );
+  static const VerificationMeta _pidKeyMeta = const VerificationMeta('pidKey');
+  @override
+  late final GeneratedColumn<String> pidKey = GeneratedColumn<String>(
+    'pid_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _contextoMeta = const VerificationMeta(
+    'contexto',
+  );
+  @override
+  late final GeneratedColumn<String> contexto = GeneratedColumn<String>(
+    'contexto',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _consecutiveDeviatedSessionsMeta =
+      const VerificationMeta('consecutiveDeviatedSessions');
+  @override
+  late final GeneratedColumn<int> consecutiveDeviatedSessions =
+      GeneratedColumn<int>(
+        'consecutive_deviated_sessions',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0),
+      );
+  static const VerificationMeta _lastSessionIdMeta = const VerificationMeta(
+    'lastSessionId',
+  );
+  @override
+  late final GeneratedColumn<int> lastSessionId = GeneratedColumn<int>(
+    'last_session_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    uuid,
+    syncedAt,
+    vehicleId,
+    pidKey,
+    contexto,
+    consecutiveDeviatedSessions,
+    lastSessionId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'trend_watches';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TrendWatch> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    if (data.containsKey('vehicle_id')) {
+      context.handle(
+        _vehicleIdMeta,
+        vehicleId.isAcceptableOrUnknown(data['vehicle_id']!, _vehicleIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_vehicleIdMeta);
+    }
+    if (data.containsKey('pid_key')) {
+      context.handle(
+        _pidKeyMeta,
+        pidKey.isAcceptableOrUnknown(data['pid_key']!, _pidKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_pidKeyMeta);
+    }
+    if (data.containsKey('contexto')) {
+      context.handle(
+        _contextoMeta,
+        contexto.isAcceptableOrUnknown(data['contexto']!, _contextoMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_contextoMeta);
+    }
+    if (data.containsKey('consecutive_deviated_sessions')) {
+      context.handle(
+        _consecutiveDeviatedSessionsMeta,
+        consecutiveDeviatedSessions.isAcceptableOrUnknown(
+          data['consecutive_deviated_sessions']!,
+          _consecutiveDeviatedSessionsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_session_id')) {
+      context.handle(
+        _lastSessionIdMeta,
+        lastSessionId.isAcceptableOrUnknown(
+          data['last_session_id']!,
+          _lastSessionIdMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TrendWatch map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TrendWatch(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
+      )!,
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}synced_at'],
+      ),
+      vehicleId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}vehicle_id'],
+      )!,
+      pidKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pid_key'],
+      )!,
+      contexto: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}contexto'],
+      )!,
+      consecutiveDeviatedSessions: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}consecutive_deviated_sessions'],
+      )!,
+      lastSessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_session_id'],
+      ),
+    );
+  }
+
+  @override
+  $TrendWatchesTable createAlias(String alias) {
+    return $TrendWatchesTable(attachedDatabase, alias);
+  }
+}
+
+class TrendWatch extends DataClass implements Insertable<TrendWatch> {
+  final int id;
+  final String uuid;
+  final DateTime? syncedAt;
+  final int vehicleId;
+  final String pidKey;
+  final String contexto;
+  final int consecutiveDeviatedSessions;
+  final int? lastSessionId;
+  const TrendWatch({
+    required this.id,
+    required this.uuid,
+    this.syncedAt,
+    required this.vehicleId,
+    required this.pidKey,
+    required this.contexto,
+    required this.consecutiveDeviatedSessions,
+    this.lastSessionId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<DateTime>(syncedAt);
+    }
+    map['vehicle_id'] = Variable<int>(vehicleId);
+    map['pid_key'] = Variable<String>(pidKey);
+    map['contexto'] = Variable<String>(contexto);
+    map['consecutive_deviated_sessions'] = Variable<int>(
+      consecutiveDeviatedSessions,
+    );
+    if (!nullToAbsent || lastSessionId != null) {
+      map['last_session_id'] = Variable<int>(lastSessionId);
+    }
+    return map;
+  }
+
+  TrendWatchesCompanion toCompanion(bool nullToAbsent) {
+    return TrendWatchesCompanion(
+      id: Value(id),
+      uuid: Value(uuid),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+      vehicleId: Value(vehicleId),
+      pidKey: Value(pidKey),
+      contexto: Value(contexto),
+      consecutiveDeviatedSessions: Value(consecutiveDeviatedSessions),
+      lastSessionId: lastSessionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSessionId),
+    );
+  }
+
+  factory TrendWatch.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TrendWatch(
+      id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
+      syncedAt: serializer.fromJson<DateTime?>(json['syncedAt']),
+      vehicleId: serializer.fromJson<int>(json['vehicleId']),
+      pidKey: serializer.fromJson<String>(json['pidKey']),
+      contexto: serializer.fromJson<String>(json['contexto']),
+      consecutiveDeviatedSessions: serializer.fromJson<int>(
+        json['consecutiveDeviatedSessions'],
+      ),
+      lastSessionId: serializer.fromJson<int?>(json['lastSessionId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
+      'syncedAt': serializer.toJson<DateTime?>(syncedAt),
+      'vehicleId': serializer.toJson<int>(vehicleId),
+      'pidKey': serializer.toJson<String>(pidKey),
+      'contexto': serializer.toJson<String>(contexto),
+      'consecutiveDeviatedSessions': serializer.toJson<int>(
+        consecutiveDeviatedSessions,
+      ),
+      'lastSessionId': serializer.toJson<int?>(lastSessionId),
+    };
+  }
+
+  TrendWatch copyWith({
+    int? id,
+    String? uuid,
+    Value<DateTime?> syncedAt = const Value.absent(),
+    int? vehicleId,
+    String? pidKey,
+    String? contexto,
+    int? consecutiveDeviatedSessions,
+    Value<int?> lastSessionId = const Value.absent(),
+  }) => TrendWatch(
+    id: id ?? this.id,
+    uuid: uuid ?? this.uuid,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+    vehicleId: vehicleId ?? this.vehicleId,
+    pidKey: pidKey ?? this.pidKey,
+    contexto: contexto ?? this.contexto,
+    consecutiveDeviatedSessions:
+        consecutiveDeviatedSessions ?? this.consecutiveDeviatedSessions,
+    lastSessionId: lastSessionId.present
+        ? lastSessionId.value
+        : this.lastSessionId,
+  );
+  TrendWatch copyWithCompanion(TrendWatchesCompanion data) {
+    return TrendWatch(
+      id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+      vehicleId: data.vehicleId.present ? data.vehicleId.value : this.vehicleId,
+      pidKey: data.pidKey.present ? data.pidKey.value : this.pidKey,
+      contexto: data.contexto.present ? data.contexto.value : this.contexto,
+      consecutiveDeviatedSessions: data.consecutiveDeviatedSessions.present
+          ? data.consecutiveDeviatedSessions.value
+          : this.consecutiveDeviatedSessions,
+      lastSessionId: data.lastSessionId.present
+          ? data.lastSessionId.value
+          : this.lastSessionId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TrendWatch(')
+          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('pidKey: $pidKey, ')
+          ..write('contexto: $contexto, ')
+          ..write('consecutiveDeviatedSessions: $consecutiveDeviatedSessions, ')
+          ..write('lastSessionId: $lastSessionId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    uuid,
+    syncedAt,
+    vehicleId,
+    pidKey,
+    contexto,
+    consecutiveDeviatedSessions,
+    lastSessionId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TrendWatch &&
+          other.id == this.id &&
+          other.uuid == this.uuid &&
+          other.syncedAt == this.syncedAt &&
+          other.vehicleId == this.vehicleId &&
+          other.pidKey == this.pidKey &&
+          other.contexto == this.contexto &&
+          other.consecutiveDeviatedSessions ==
+              this.consecutiveDeviatedSessions &&
+          other.lastSessionId == this.lastSessionId);
+}
+
+class TrendWatchesCompanion extends UpdateCompanion<TrendWatch> {
+  final Value<int> id;
+  final Value<String> uuid;
+  final Value<DateTime?> syncedAt;
+  final Value<int> vehicleId;
+  final Value<String> pidKey;
+  final Value<String> contexto;
+  final Value<int> consecutiveDeviatedSessions;
+  final Value<int?> lastSessionId;
+  const TrendWatchesCompanion({
+    this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.vehicleId = const Value.absent(),
+    this.pidKey = const Value.absent(),
+    this.contexto = const Value.absent(),
+    this.consecutiveDeviatedSessions = const Value.absent(),
+    this.lastSessionId = const Value.absent(),
+  });
+  TrendWatchesCompanion.insert({
+    this.id = const Value.absent(),
+    required String uuid,
+    this.syncedAt = const Value.absent(),
+    required int vehicleId,
+    required String pidKey,
+    required String contexto,
+    this.consecutiveDeviatedSessions = const Value.absent(),
+    this.lastSessionId = const Value.absent(),
+  }) : uuid = Value(uuid),
+       vehicleId = Value(vehicleId),
+       pidKey = Value(pidKey),
+       contexto = Value(contexto);
+  static Insertable<TrendWatch> custom({
+    Expression<int>? id,
+    Expression<String>? uuid,
+    Expression<DateTime>? syncedAt,
+    Expression<int>? vehicleId,
+    Expression<String>? pidKey,
+    Expression<String>? contexto,
+    Expression<int>? consecutiveDeviatedSessions,
+    Expression<int>? lastSessionId,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (vehicleId != null) 'vehicle_id': vehicleId,
+      if (pidKey != null) 'pid_key': pidKey,
+      if (contexto != null) 'contexto': contexto,
+      if (consecutiveDeviatedSessions != null)
+        'consecutive_deviated_sessions': consecutiveDeviatedSessions,
+      if (lastSessionId != null) 'last_session_id': lastSessionId,
+    });
+  }
+
+  TrendWatchesCompanion copyWith({
+    Value<int>? id,
+    Value<String>? uuid,
+    Value<DateTime?>? syncedAt,
+    Value<int>? vehicleId,
+    Value<String>? pidKey,
+    Value<String>? contexto,
+    Value<int>? consecutiveDeviatedSessions,
+    Value<int?>? lastSessionId,
+  }) {
+    return TrendWatchesCompanion(
+      id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
+      syncedAt: syncedAt ?? this.syncedAt,
+      vehicleId: vehicleId ?? this.vehicleId,
+      pidKey: pidKey ?? this.pidKey,
+      contexto: contexto ?? this.contexto,
+      consecutiveDeviatedSessions:
+          consecutiveDeviatedSessions ?? this.consecutiveDeviatedSessions,
+      lastSessionId: lastSessionId ?? this.lastSessionId,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<DateTime>(syncedAt.value);
+    }
+    if (vehicleId.present) {
+      map['vehicle_id'] = Variable<int>(vehicleId.value);
+    }
+    if (pidKey.present) {
+      map['pid_key'] = Variable<String>(pidKey.value);
+    }
+    if (contexto.present) {
+      map['contexto'] = Variable<String>(contexto.value);
+    }
+    if (consecutiveDeviatedSessions.present) {
+      map['consecutive_deviated_sessions'] = Variable<int>(
+        consecutiveDeviatedSessions.value,
+      );
+    }
+    if (lastSessionId.present) {
+      map['last_session_id'] = Variable<int>(lastSessionId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TrendWatchesCompanion(')
+          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('pidKey: $pidKey, ')
+          ..write('contexto: $contexto, ')
+          ..write('consecutiveDeviatedSessions: $consecutiveDeviatedSessions, ')
+          ..write('lastSessionId: $lastSessionId')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4148,6 +4673,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $DtcEventsTable dtcEvents = $DtcEventsTable(this);
   late final $BaselinesTable baselines = $BaselinesTable(this);
   late final $AnomaliesTable anomalies = $AnomaliesTable(this);
+  late final $TrendWatchesTable trendWatches = $TrendWatchesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4160,6 +4686,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     dtcEvents,
     baselines,
     anomalies,
+    trendWatches,
   ];
 }
 
@@ -4224,6 +4751,24 @@ final class $$VehiclesTableReferences
     ).filter((f) => f.vehicleId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_baselinesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$TrendWatchesTable, List<TrendWatch>>
+  _trendWatchesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.trendWatches,
+    aliasName: 'vehicles__id__trend_watches__vehicle_id',
+  );
+
+  $$TrendWatchesTableProcessedTableManager get trendWatchesRefs {
+    final manager = $$TrendWatchesTableTableManager(
+      $_db,
+      $_db.trendWatches,
+    ).filter((f) => f.vehicleId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_trendWatchesRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -4331,6 +4876,31 @@ class $$VehiclesTableFilterComposer
           }) => $$BaselinesTableFilterComposer(
             $db: $db,
             $table: $db.baselines,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> trendWatchesRefs(
+    Expression<bool> Function($$TrendWatchesTableFilterComposer f) f,
+  ) {
+    final $$TrendWatchesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.trendWatches,
+      getReferencedColumn: (t) => t.vehicleId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TrendWatchesTableFilterComposer(
+            $db: $db,
+            $table: $db.trendWatches,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -4496,6 +5066,31 @@ class $$VehiclesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> trendWatchesRefs<T extends Object>(
+    Expression<T> Function($$TrendWatchesTableAnnotationComposer a) f,
+  ) {
+    final $$TrendWatchesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.trendWatches,
+      getReferencedColumn: (t) => t.vehicleId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TrendWatchesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.trendWatches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$VehiclesTableTableManager
@@ -4511,7 +5106,11 @@ class $$VehiclesTableTableManager
           $$VehiclesTableUpdateCompanionBuilder,
           (Vehicle, $$VehiclesTableReferences),
           Vehicle,
-          PrefetchHooks Function({bool sessionsRefs, bool baselinesRefs})
+          PrefetchHooks Function({
+            bool sessionsRefs,
+            bool baselinesRefs,
+            bool trendWatchesRefs,
+          })
         > {
   $$VehiclesTableTableManager(_$AppDatabase db, $VehiclesTable table)
     : super(
@@ -4581,12 +5180,17 @@ class $$VehiclesTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({sessionsRefs = false, baselinesRefs = false}) {
+              ({
+                sessionsRefs = false,
+                baselinesRefs = false,
+                trendWatchesRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (sessionsRefs) db.sessions,
                     if (baselinesRefs) db.baselines,
+                    if (trendWatchesRefs) db.trendWatches,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -4633,6 +5237,27 @@ class $$VehiclesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (trendWatchesRefs)
+                        await $_getPrefetchedData<
+                          Vehicle,
+                          $VehiclesTable,
+                          TrendWatch
+                        >(
+                          currentTable: table,
+                          referencedTable: $$VehiclesTableReferences
+                              ._trendWatchesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$VehiclesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).trendWatchesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.vehicleId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -4653,7 +5278,11 @@ typedef $$VehiclesTableProcessedTableManager =
       $$VehiclesTableUpdateCompanionBuilder,
       (Vehicle, $$VehiclesTableReferences),
       Vehicle,
-      PrefetchHooks Function({bool sessionsRefs, bool baselinesRefs})
+      PrefetchHooks Function({
+        bool sessionsRefs,
+        bool baselinesRefs,
+        bool trendWatchesRefs,
+      })
     >;
 typedef $$SessionsTableCreateCompanionBuilder = SessionsCompanion Function({
   Value<int> id,
@@ -7456,6 +8085,376 @@ typedef $$AnomaliesTableProcessedTableManager =
       Anomaly,
       PrefetchHooks Function({bool sessionId})
     >;
+typedef $$TrendWatchesTableCreateCompanionBuilder =
+    TrendWatchesCompanion Function({
+      Value<int> id,
+      required String uuid,
+      Value<DateTime?> syncedAt,
+      required int vehicleId,
+      required String pidKey,
+      required String contexto,
+      Value<int> consecutiveDeviatedSessions,
+      Value<int?> lastSessionId,
+    });
+typedef $$TrendWatchesTableUpdateCompanionBuilder =
+    TrendWatchesCompanion Function({
+      Value<int> id,
+      Value<String> uuid,
+      Value<DateTime?> syncedAt,
+      Value<int> vehicleId,
+      Value<String> pidKey,
+      Value<String> contexto,
+      Value<int> consecutiveDeviatedSessions,
+      Value<int?> lastSessionId,
+    });
+
+final class $$TrendWatchesTableReferences
+    extends BaseReferences<_$AppDatabase, $TrendWatchesTable, TrendWatch> {
+  $$TrendWatchesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $VehiclesTable _vehicleIdTable(_$AppDatabase db) =>
+      db.vehicles.createAlias('trend_watches__vehicle_id__vehicles__id');
+
+  $$VehiclesTableProcessedTableManager get vehicleId {
+    final $_column = $_itemColumn<int>('vehicle_id')!;
+
+    final manager = $$VehiclesTableTableManager(
+      $_db,
+      $_db.vehicles,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_vehicleIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$TrendWatchesTableFilterComposer
+    extends Composer<_$AppDatabase, $TrendWatchesTable> {
+  $$TrendWatchesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pidKey => $composableBuilder(
+    column: $table.pidKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get contexto => $composableBuilder(
+    column: $table.contexto,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get consecutiveDeviatedSessions => $composableBuilder(
+    column: $table.consecutiveDeviatedSessions,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastSessionId => $composableBuilder(
+    column: $table.lastSessionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$VehiclesTableFilterComposer get vehicleId {
+    final $$VehiclesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.vehicleId,
+      referencedTable: $db.vehicles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VehiclesTableFilterComposer(
+            $db: $db,
+            $table: $db.vehicles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TrendWatchesTableOrderingComposer
+    extends Composer<_$AppDatabase, $TrendWatchesTable> {
+  $$TrendWatchesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pidKey => $composableBuilder(
+    column: $table.pidKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get contexto => $composableBuilder(
+    column: $table.contexto,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get consecutiveDeviatedSessions => $composableBuilder(
+    column: $table.consecutiveDeviatedSessions,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastSessionId => $composableBuilder(
+    column: $table.lastSessionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$VehiclesTableOrderingComposer get vehicleId {
+    final $$VehiclesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.vehicleId,
+      referencedTable: $db.vehicles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VehiclesTableOrderingComposer(
+            $db: $db,
+            $table: $db.vehicles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TrendWatchesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TrendWatchesTable> {
+  $$TrendWatchesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get pidKey =>
+      $composableBuilder(column: $table.pidKey, builder: (column) => column);
+
+  GeneratedColumn<String> get contexto =>
+      $composableBuilder(column: $table.contexto, builder: (column) => column);
+
+  GeneratedColumn<int> get consecutiveDeviatedSessions => $composableBuilder(
+    column: $table.consecutiveDeviatedSessions,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lastSessionId => $composableBuilder(
+    column: $table.lastSessionId,
+    builder: (column) => column,
+  );
+
+  $$VehiclesTableAnnotationComposer get vehicleId {
+    final $$VehiclesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.vehicleId,
+      referencedTable: $db.vehicles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VehiclesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.vehicles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TrendWatchesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TrendWatchesTable,
+          TrendWatch,
+          $$TrendWatchesTableFilterComposer,
+          $$TrendWatchesTableOrderingComposer,
+          $$TrendWatchesTableAnnotationComposer,
+          $$TrendWatchesTableCreateCompanionBuilder,
+          $$TrendWatchesTableUpdateCompanionBuilder,
+          (TrendWatch, $$TrendWatchesTableReferences),
+          TrendWatch,
+          PrefetchHooks Function({bool vehicleId})
+        > {
+  $$TrendWatchesTableTableManager(_$AppDatabase db, $TrendWatchesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TrendWatchesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TrendWatchesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TrendWatchesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> uuid = const Value.absent(),
+                Value<DateTime?> syncedAt = const Value.absent(),
+                Value<int> vehicleId = const Value.absent(),
+                Value<String> pidKey = const Value.absent(),
+                Value<String> contexto = const Value.absent(),
+                Value<int> consecutiveDeviatedSessions = const Value.absent(),
+                Value<int?> lastSessionId = const Value.absent(),
+              }) => TrendWatchesCompanion(
+                id: id,
+                uuid: uuid,
+                syncedAt: syncedAt,
+                vehicleId: vehicleId,
+                pidKey: pidKey,
+                contexto: contexto,
+                consecutiveDeviatedSessions: consecutiveDeviatedSessions,
+                lastSessionId: lastSessionId,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String uuid,
+                Value<DateTime?> syncedAt = const Value.absent(),
+                required int vehicleId,
+                required String pidKey,
+                required String contexto,
+                Value<int> consecutiveDeviatedSessions = const Value.absent(),
+                Value<int?> lastSessionId = const Value.absent(),
+              }) => TrendWatchesCompanion.insert(
+                id: id,
+                uuid: uuid,
+                syncedAt: syncedAt,
+                vehicleId: vehicleId,
+                pidKey: pidKey,
+                contexto: contexto,
+                consecutiveDeviatedSessions: consecutiveDeviatedSessions,
+                lastSessionId: lastSessionId,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$TrendWatchesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({vehicleId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (vehicleId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.vehicleId,
+                        referencedTable: $$TrendWatchesTableReferences
+                            ._vehicleIdTable(db),
+                        referencedColumn: $$TrendWatchesTableReferences
+                            ._vehicleIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$TrendWatchesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TrendWatchesTable,
+      TrendWatch,
+      $$TrendWatchesTableFilterComposer,
+      $$TrendWatchesTableOrderingComposer,
+      $$TrendWatchesTableAnnotationComposer,
+      $$TrendWatchesTableCreateCompanionBuilder,
+      $$TrendWatchesTableUpdateCompanionBuilder,
+      (TrendWatch, $$TrendWatchesTableReferences),
+      TrendWatch,
+      PrefetchHooks Function({bool vehicleId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7474,4 +8473,6 @@ class $AppDatabaseManager {
       $$BaselinesTableTableManager(_db, _db.baselines);
   $$AnomaliesTableTableManager get anomalies =>
       $$AnomaliesTableTableManager(_db, _db.anomalies);
+  $$TrendWatchesTableTableManager get trendWatches =>
+      $$TrendWatchesTableTableManager(_db, _db.trendWatches);
 }
