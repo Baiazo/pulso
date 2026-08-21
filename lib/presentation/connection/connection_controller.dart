@@ -5,18 +5,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/result.dart';
 import '../../data/obd/elm327/elm327_client.dart';
 import '../../data/obd/elm327/response_parser.dart';
+import '../../data/obd/transport/bluetooth_classic_scanner.dart';
+import '../../data/obd/transport/bluetooth_classic_transport.dart';
+import '../../data/obd/transport/bluetooth_permissions.dart';
 import '../../data/obd/transport/device_scanner.dart';
 import '../../data/obd/transport/mock/mock_vehicle.dart';
 import '../../data/obd/transport/mock_transport.dart';
 import '../../data/obd/transport/obd_transport.dart';
+import '../../domain/entities/enums.dart';
 import '../providers/active_session_controller.dart';
 import 'connection_state.dart';
 
-final deviceScannerProvider = Provider<DeviceScanner>((ref) => MockDeviceScanner());
+/// Varredura real (item 9) — a maioria dos clones ELM327 baratos é
+/// Bluetooth clássico (SPP), não BLE (§5); "Ver em modo demonstração"
+/// continua sempre no `MockDeviceScanner`/`MockTransport`, nunca troca
+/// (RF21: o simulado é permanente, não um estágio de desenvolvimento).
+final deviceScannerProvider = Provider<DeviceScanner>((ref) => BluetoothClassicDeviceScanner());
 
-/// Item 9 troca este provider por um que decide entre BLE e SPP clássico
-/// conforme o dispositivo escolhido — a interface `ObdTransport` já
-/// esconde essa diferença do resto do app (§5).
+/// Atrás de provider pelo mesmo motivo de `deviceScannerProvider`: em
+/// teste de widget não existe canal de plataforma real do
+/// `permission_handler`, e essa checagem não pode travar nem lançar ali —
+/// sobrescrever com `() async => true` deixa o teste exercitar o resto do
+/// fluxo sem depender do plugin.
+final bluetoothPermissionsProvider =
+    Provider<Future<bool> Function()>((ref) => ensureBluetoothPermissions);
+
 final connectionControllerProvider =
     NotifierProvider<ConnectionController, ObdConnectionState>(
   ConnectionController.new,
@@ -27,6 +40,16 @@ class ConnectionController extends Notifier<ObdConnectionState> {
   ObdConnectionState build() => const ConnectionIdle();
 
   Future<void> startScan() async {
+    // Permissão negada ou rádio desligado não pode virar "nenhum
+    // adaptador encontrado" silencioso (§14) — a varredura clássica
+    // devolve lista vazia sem erro nos dois casos, e isso parece bug de
+    // adaptador ausente pro usuário.
+    final canScan = await ref.read(bluetoothPermissionsProvider)();
+    if (!canScan) {
+      state = const ConnectionFailed(ConnectionErrorKind.bluetoothUnavailable);
+      return;
+    }
+
     state = const ConnectionScanning([]);
     final scanner = ref.read(deviceScannerProvider);
     await for (final devices in scanner.scan()) {
@@ -36,16 +59,16 @@ class ConnectionController extends Notifier<ObdConnectionState> {
   }
 
   /// "Ver em modo demonstração" — conecta direto ao simulador, sem
-  /// varredura (RF21).
+  /// varredura (RF21). Sempre `MockTransport`, mesmo depois do item 9: o
+  /// simulado é o caminho de teste permanente, não um estágio de
+  /// desenvolvimento que o hardware real substitui.
   Future<void> connectDemoMode({MockProfile profile = MockProfile.normal}) {
     return _connect(MockTransport(profile: profile));
   }
 
-  /// "Conectar ao [dispositivo]" — mesmo simulador por enquanto (não há
-  /// transporte Bluetooth real até o item 9); o ponto importante é que a
-  /// tela de handshake não muda quando isso for trocado.
+  /// "Conectar ao [dispositivo]" — Bluetooth clássico (SPP) real, item 9.
   Future<void> connectToDevice(DiscoveredDevice device) {
-    return _connect(MockTransport());
+    return _connect(BluetoothClassicTransport(device.address));
   }
 
   Future<void> _connect(ObdTransport transport) async {
@@ -85,6 +108,9 @@ class ConnectionController extends Notifier<ObdConnectionState> {
           ref.read(activeSessionProvider.notifier).startFor(
                 client,
                 protocolDescription: protocolDescription,
+                origem: transport is MockTransport
+                    ? SessionOrigin.simulado
+                    : SessionOrigin.real,
               ),
         );
       case Err():

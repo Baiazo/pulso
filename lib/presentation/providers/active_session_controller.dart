@@ -60,7 +60,11 @@ class ActiveSessionController extends Notifier<ActiveSession?> {
     return null;
   }
 
-  Future<void> startFor(Elm327Client client, {required String protocolDescription}) async {
+  Future<void> startFor(
+    Elm327Client client, {
+    required String protocolDescription,
+    required SessionOrigin origem,
+  }) async {
     final vehicleRepo = ref.read(vehicleRepositoryProvider);
     final sessionRepo = ref.read(sessionRepositoryProvider);
     final readingRepo = ref.read(readingRepositoryProvider);
@@ -87,9 +91,7 @@ class ActiveSessionController extends Notifier<ActiveSession?> {
       iniciadaEm: DateTime.now(),
       protocolo: protocolDescription,
       adaptador: 'ELM327',
-      // Item 9 distingue real de simulado pelo tipo de transporte —
-      // por enquanto só existe o simulado (MockTransport).
-      origem: SessionOrigin.simulado,
+      origem: origem,
     );
 
     final engine = AnalysisEngine(

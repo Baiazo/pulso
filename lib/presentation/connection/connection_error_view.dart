@@ -84,6 +84,22 @@ const _content = {
     primaryAction: 'VER ADAPTADORES TESTADOS',
     secondaryAction: 'USAR SEM DETECÇÃO DE ANOMALIA',
   ),
+  ConnectionErrorKind.bluetoothUnavailable: _ErrorContent(
+    title: 'Bluetooth indisponível',
+    subtitle: 'Sem permissão ou o rádio está desligado',
+    reason:
+        'A busca por adaptadores precisa de Bluetooth ligado e, no '
+        'Android, da permissão de dispositivos próximos concedida — sem '
+        'isso a busca volta vazia sem avisar por quê.',
+    steps: [
+      'Ligue o Bluetooth do celular.',
+      'Nas permissões do app, permita "Dispositivos próximos" (ou '
+          '"Localização", em Android mais antigo).',
+      'Tente buscar de novo.',
+    ],
+    primaryAction: 'TENTAR DE NOVO',
+    severityColor: PulsoColors.attentionInk,
+  ),
 };
 
 /// Telas "02C"–"02F" do mockup — cada falha de conexão é tela de produto,

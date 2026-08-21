@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pulso/data/db/database.dart';
+import 'package:pulso/data/obd/transport/device_scanner.dart';
 import 'package:pulso/presentation/connection/connection_controller.dart';
 import 'package:pulso/presentation/connection/connection_flow_screen.dart';
 import 'package:pulso/presentation/connection/connection_state.dart';
@@ -11,6 +12,19 @@ import 'package:pulso/presentation/providers/app_providers.dart';
 
 Widget _app() => const ProviderScope(
       child: MaterialApp(home: ConnectionFlowScreen()),
+    );
+
+/// A varredura real (item 9) precisa de permissão de runtime e de rádio
+/// Bluetooth de verdade — nenhum dos dois existe em teste de widget.
+/// `deviceScannerProvider`/`bluetoothPermissionsProvider` existem
+/// justamente pra poder sobrescrever os dois aqui, do mesmo jeito que
+/// `databaseProvider` é sobrescrito pra fugir do `path_provider` real.
+Widget _appWithMockScanner() => ProviderScope(
+      overrides: [
+        deviceScannerProvider.overrideWithValue(MockDeviceScanner()),
+        bluetoothPermissionsProvider.overrideWithValue(() async => true),
+      ],
+      child: const MaterialApp(home: ConnectionFlowScreen()),
     );
 
 /// Banco em memória — evita que a sessão pós-conexão (ActiveSessionController)
@@ -86,7 +100,7 @@ void main() {
 
     testWidgets('buscar adaptador mostra os dispositivos do MockDeviceScanner',
         (tester) async {
-      await tester.pumpWidget(_app());
+      await tester.pumpWidget(_appWithMockScanner());
       await tester.pump();
 
       await tester.tap(find.text('CONECTAR UM ADAPTADOR'));
@@ -101,7 +115,7 @@ void main() {
 
     testWidgets('a seta de voltar na busca de adaptador retorna pra tela de '
         'abertura', (tester) async {
-      await tester.pumpWidget(_app());
+      await tester.pumpWidget(_appWithMockScanner());
       await tester.pump();
 
       await tester.tap(find.text('CONECTAR UM ADAPTADOR'));
@@ -119,6 +133,27 @@ void main() {
 
       expect(find.text('PULSO'), findsOneWidget);
       expect(find.text('CONECTAR UM ADAPTADOR'), findsOneWidget);
+    });
+
+    testWidgets(
+        'sem permissão de Bluetooth (padrão de teste, sem canal de '
+        'plataforma) mostra a tela de erro em vez de travar ou lançar',
+        (tester) async {
+      // Nenhuma sobrescrita: usa o `ensureBluetoothPermissions` de
+      // verdade, que em teste de widget não tem canal de plataforma do
+      // `permission_handler` — precisa resolver pra `false` de forma
+      // limpa, não travar nem lançar (item 9, §14).
+      await tester.pumpWidget(_app());
+      await tester.pump();
+
+      await tester.tap(find.text('CONECTAR UM ADAPTADOR'));
+      // Sem handler de canal nenhum registrado, o pedido de permissão nem
+      // lança nem resolve sozinho — só o timeout defensivo de
+      // `ensureBluetoothPermissions` (30s) desbloqueia. Relógio falso: um
+      // pump grande custa nada de verdade.
+      await tester.pump(const Duration(seconds: 31));
+
+      expect(find.text('Bluetooth indisponível'), findsOneWidget);
     });
 
     testWidgets('tela de erro mostra título, motivo e passos numerados',

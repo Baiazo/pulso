@@ -10,6 +10,7 @@ enum ConnectionErrorKind {
   ignitionOff, // 02D — central não responde
   protocolNotRecognized, // 02E — nenhum dos 9 protocolos respondeu
   incompatibleAdapter, // 02F — firmware clone incompleto
+  bluetoothUnavailable, // item 9 — sem permissão ou rádio desligado
 }
 
 sealed class ObdConnectionState {
